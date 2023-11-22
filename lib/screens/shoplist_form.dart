@@ -1,63 +1,31 @@
 import 'package:flutter/material.dart';
-import '../../widgets/left_drawer.dart';
-import 'package:rizmau_shop/models/item.dart';
+import 'package:rizmau_shop/widgets/left_drawer.dart';
+import 'package:rizmau_shop/screens/menu.dart';
+import 'dart:convert';
+import 'package:provider/provider.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:rizmau_shop/models/product.dart';
 
 class ShopFormPage extends StatefulWidget {
-  const ShopFormPage({super.key});
+    const ShopFormPage({super.key});
 
-  @override
-  State<ShopFormPage> createState() => _ShopFormPageState();
+    @override
+    State<ShopFormPage> createState() => _ShopFormPageState();
 }
 
-List<Item> itemList = [];
+List<Product> itemList = [];
 
 class _ShopFormPageState extends State<ShopFormPage> {
   final _formKey = GlobalKey<FormState>();
   String _name = "";
-  int _price = 0;
+  String _region = "";
+  int _amount = 0;
+  int _amount_collected = 0;
   String _description = "";
-
-  void _saveItem() {
-    if (_formKey.currentState!.validate()) {
-      itemList.add(Item(
-        name: _name,
-        price: _price,
-        description: _description,
-      ));
-
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('Item berhasil tersimpan'),
-            content: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Nama: $_name'),
-                  Text('Harga: $_price'),
-                  Text('Deskripsi: $_description'),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                child: const Text('OK'),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          );
-        },
-      );
-
-      _formKey.currentState!.reset();
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
     return Scaffold(
       appBar: AppBar(
         title: const Center(
@@ -77,7 +45,7 @@ class _ShopFormPageState extends State<ShopFormPage> {
               padding: const EdgeInsets.all(8.0),
               child: TextFormField(
                 decoration: InputDecoration(
-                  labelText: "Nama Item",
+                  labelText: "Item name",
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(5.0),
                   ),
@@ -99,23 +67,71 @@ class _ShopFormPageState extends State<ShopFormPage> {
               padding: const EdgeInsets.all(8.0),
               child: TextFormField(
                 decoration: InputDecoration(
-                  hintText: "Harga",
-                  labelText: "Harga",
+                  labelText: "Region",
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(5.0),
                   ),
                 ),
                 onChanged: (String? value) {
                   setState(() {
-                    _price = int.parse(value!);
+                    _region = value!;
                   });
                 },
                 validator: (String? value) {
                   if (value == null || value.isEmpty) {
-                    return "Harga tidak boleh kosong!";
+                    return "Region tidak boleh kosong!";
+                  }
+                  return null;
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextFormField(
+                decoration: InputDecoration(
+                  hintText: "Amount",
+                  labelText: "Amount",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(5.0),
+                  ),
+                ),
+                onChanged: (String? value) {
+                  setState(() {
+                    _amount = int.parse(value!);
+                  });
+                },
+                validator: (String? value) {
+                  if (value == null || value.isEmpty) {
+                    return "Jumlah tidak boleh kosong!";
                   }
                   if (int.tryParse(value) == null) {
-                    return "Harga harus berupa angka!";
+                    return "Jumlah harus berupa angka!";
+                  }
+                  return null;
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextFormField(
+                decoration: InputDecoration(
+                  hintText: "Amount Collected",
+                  labelText: "Amount Collected",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(5.0),
+                  ),
+                ),
+                onChanged: (String? value) {
+                  setState(() {
+                    _amount_collected = int.parse(value!);
+                  });
+                },
+                validator: (String? value) {
+                  if (value == null || value.isEmpty) {
+                    return "Jumlah yang telah dikumpulkan tidak boleh kosong!";
+                  }
+                  if (int.tryParse(value) == null) {
+                    return "Jumlah yang telah dikumpulkan harus berupa angka!";
                   }
                   return null;
                 },
@@ -152,7 +168,38 @@ class _ShopFormPageState extends State<ShopFormPage> {
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all(Colors.indigo),
                   ),
-                  onPressed: _saveItem,
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                        // Kirim ke Django dan tunggu respons
+                        // TODO: Ganti URL dan jangan lupa tambahkan trailing slash (/) di akhir URL!
+                        final response = await request.postJson(
+                        "https://rizki-maulana23-tugas.pbp.cs.ui.ac.id/create-flutter/",
+                        jsonEncode(<String, String>{
+                            'user':"bruh",
+                            'name': _name,
+                            'region': _region,
+                            'amount': _amount.toString(),
+                            'amount_collected': _amount_collected.toString(),
+                            'description': _description,
+                        }));
+                        if (response['status'] == 'success') {
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(
+                            content: Text("Produk baru berhasil disimpan!"),
+                            ));
+                            Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => MyHomePage()),
+                            );
+                        } else {
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(
+                                content:
+                                    Text("Terdapat kesalahan, silakan coba lagi."),
+                            ));
+                        }
+                    }
+                },
                   child: const Text(
                     "Save",
                     style: TextStyle(color: Colors.white),

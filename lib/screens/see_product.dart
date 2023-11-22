@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:rizmau_shop/models/item.dart';
+import 'package:rizmau_shop/models/product.dart';
 
 class ProductListPage extends StatelessWidget {
-  final List<Item> items;
+  final List<Product> items;
 
   ProductListPage({Key? key, required this.items}) : super(key: key);
 
@@ -17,9 +17,13 @@ class ProductListPage extends StatelessWidget {
         itemBuilder: (context, index) {
           return Card(
             child: ListTile(
-              title: Text(items[index].name),
+              title: Text(items[index].fields.name),
               subtitle: Text(
-                  'Harga: ${items[index].price}\nDeskripsi: ${items[index].description}'),
+                  'Region: ${items[index].fields.region}\n' + 
+                  'Amount: ${items[index].fields.amount}\n' + 
+                  'Amount Collected : ${items[index].fields.amountCollected}\n' + 
+                  'Deskripsi: ${items[index].fields.description}' + 
+                  ''),
             ),
           );
         },

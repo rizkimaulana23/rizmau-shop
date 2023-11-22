@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'package:rizmau_shop/screens/menu.dart';
 import '../screens/shoplist_form.dart';
+import '../screens/see_product.dart';
+import '../screens/list_product.dart';
 import '../screens/see_product.dart';
 
 class LeftDrawer extends StatelessWidget {
@@ -29,7 +30,7 @@ class LeftDrawer extends StatelessWidget {
                 ),
                 Padding(padding: EdgeInsets.all(10)),
                 Text(
-                  "The place to keep track on the movies you have watched!",
+                  "Toko apa aja dah",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,
@@ -75,6 +76,17 @@ class LeftDrawer extends StatelessWidget {
                         ProductListPage(items: itemList)),
               );
             },
+          ),
+          ListTile(
+              leading: const Icon(Icons.shopping_basket),
+              title: const Text('Daftar Produk'),
+              onTap: () {
+                  // Route menu ke halaman produk
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ProductPage()),
+                  );
+              },
           ),
         ],
       ),
